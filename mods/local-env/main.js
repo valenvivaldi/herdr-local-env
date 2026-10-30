@@ -9,7 +9,7 @@
 
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { exec, readTextFile, spaces, focused, props, run, notify, closeOverlay, theme } from "herdr";
+import { exec, readTextFile, spaces, focused, props, placement, run, notify, closeOverlay, theme } from "herdr";
 import * as fs from "fs/promises";
 
 import { QUIET, RUN_STATE, agoText, bandEntries, barParts, detailText, elapsed, envState, latestPerEnv, toRow } from "./lib.js";
@@ -63,6 +63,8 @@ const HEADER_PX = 41;
 const ROW_PX = 30;
 const PANEL_PAD_PX = 6;
 const PANEL_MAX_PX = 260;
+/** The panel's width as a floating block (a layout without a sidebar, like win98). */
+const FLOAT_PX = 300;
 
 const now = () => Math.floor(Date.now() / 1000);
 const openUrl = (/** @type {string} */ url) => void exec("open", [url]).catch(() => undefined);
@@ -302,20 +304,19 @@ export default class LocalEnv extends View {
     const rows = this.panelRows();
     if (this.m.envsAt > 0) this.fit(rows.length);
     const empty = this.m.envsAt === 0 ? "Buscando…" : this.m.checkouts.length === 0 ? "Sin checkout de Etendo abierto" : "Nada levantado";
+    // Floating, Herdr draws the frame and sizes the block to its content: fixed width, no fill.
+    const floats = placement() !== null;
     return v_flex()
       .id("local-env-panel")
       .on_size_change((size, cx) => {
-        const collapsed = size.width < 160;
+        const collapsed = !floats && size.width < 160;
         if (collapsed !== this.collapsed) {
           this.collapsed = collapsed;
           cx.notify();
         }
       })
-      .size_full()
-      .min_h(0)
-      .bg(t.chrome)
-      .border_t(1)
-      .border_color(t.border)
+      .when(floats, (el) => el.w(FLOAT_PX).pb(4))
+      .when(!floats, (el) => el.size_full().min_h(0).bg(t.chrome).border_t(1).border_color(t.border))
       .text_size(13)
       .when(!this.collapsed, (el) =>
         el.child(
@@ -343,10 +344,8 @@ export default class LocalEnv extends View {
       .child(
         v_flex()
           .id("local-env-list")
-          .flex_1()
-          .min_h(0)
+          .when(!floats, (el) => el.flex_1().min_h(0).overflow_y_scrollbar())
           .px(this.collapsed ? 0 : 8)
-          .overflow_y_scrollbar()
           .when(rows.length === 0 && !this.collapsed, (el) => el.child(div().px(8).h(ROW_PX).flex().items_center().text_size(12).text_color(t.dim).child(empty)))
           .children(rows),
       );

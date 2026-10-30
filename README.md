@@ -42,6 +42,20 @@ En `~/.config/herdr-app/layouts/mi-layout.json`, dentro de la columna `sidebar-l
 
 `props.block` tiene que ser igual al `id` del bloque: el panel lo usa para ajustar su alto a la cantidad de filas.
 
+### Flotante, en un layout sin sidebar (como win98)
+
+Si tu layout no tiene sidebar, clonalo igual y agregá el panel como bloque flotante en el nodo que lo contiene (en win98, el nodo `screen`). Flotando, el panel tiene un ancho fijo y crece según sus filas. Lo podés arrastrar y Herdr se acuerda de dónde lo dejaste.
+
+```bash
+herdr-app do layout.clone '{"name":"win98","as":"win98-local"}'
+```
+
+```json
+"floating": [
+  { "id": "local-env", "content": { "mod": "local-env" }, "edge": "right", "align": "center" }
+]
+```
+
 ### Atajo
 
 Agregá el de `keys.json` de este repo a `~/.config/herdr-app/keys.json`, dentro de `"global"`:
