@@ -473,7 +473,7 @@ export default class LocalEnv extends View {
           .rounded(9)
           .border_1()
           .border_color(t.border)
-          .bg(t.background)
+          .bg(t.surface)
           .p(14)
           .child(body),
       )
