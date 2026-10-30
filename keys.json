@@ -1,0 +1,5 @@
+{
+  "global": {
+    "cmd-shift-e": "mod.open:local-env"
+  }
+}
