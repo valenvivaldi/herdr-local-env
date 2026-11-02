@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { bandEntries, latestPerEnv, toRow } from "../mods/local-env/lib.js";
+import { bandEntries, latestPerEnv, runPercent, toRow } from "../mods/local-env/lib.js";
 import { checkouts, probeEnvs, readRuns } from "../mods/local-env/probe.js";
 
 const NOW = 1_800_000_000;
@@ -17,6 +17,15 @@ const progress = (over = {}) => ({
 });
 
 describe("runs", () => {
+  test("the bar: only while running, by step, never full until done", () => {
+    assert.equal(runPercent(toRow("f", progress({ step: 5, of: 8 }), NOW)), 63);
+    assert.equal(runPercent(toRow("f", progress({ step: 8, of: 8 }), NOW)), 95);
+    assert.equal(runPercent(toRow("f", progress({ step: 0, of: 0 }), NOW)), 0);
+    assert.equal(runPercent(toRow("f", progress({ state: "done" }), NOW)), undefined);
+    assert.equal(runPercent(toRow("f", progress({ state: "failed" }), NOW)), undefined);
+    assert.equal(runPercent(toRow("f", progress(), NOW, false)), undefined);
+  });
+
   test("a finished run stays a while (failures longer), a running one whose pid died is stale", () => {
     assert.equal(toRow("f", progress({ state: "done", updated: NOW - 100 }), NOW)?.state, "done");
     assert.equal(toRow("f", progress({ state: "done", updated: NOW - 200 }), NOW), undefined);

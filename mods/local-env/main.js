@@ -12,7 +12,7 @@ import { v_flex, h_flex } from "gpui-base";
 import { exec, readTextFile, spaces, focused, props, placement, run, notify, closeOverlay, theme } from "herdr";
 import * as fs from "fs/promises";
 
-import { QUIET, RUN_STATE, agoText, bandEntries, barParts, detailText, elapsed, envState, latestPerEnv, toRow } from "./lib.js";
+import { QUIET, RUN_STATE, agoText, bandEntries, barParts, detailText, elapsed, envState, latestPerEnv, runPercent, toRow } from "./lib.js";
 import { alivePids, checkouts, probeEnvs, readRuns } from "./probe.js";
 
 /**
@@ -65,6 +65,8 @@ const PANEL_PAD_PX = 6;
 const PANEL_MAX_PX = 260;
 /** The panel's width as a floating block (a layout without a sidebar, like win98). */
 const FLOAT_PX = 300;
+/** Where a running row's bar starts: past the row's padding, glyph cell and gap, under the name. */
+const BAR_LEFT_PX = 8 + 14 + 9;
 
 const now = () => Math.floor(Date.now() / 1000);
 const openUrl = (/** @type {string} */ url) => void exec("open", [url]).catch(() => undefined);
@@ -227,26 +229,44 @@ export default class LocalEnv extends View {
 
   // ── The sidebar panel ─────────────────────────────────────────────────────────────
 
-  /** A sidebar row, shaped like the agents list's: glyph, name, then what is on the right. */
-  panelRow(id, glyph, name, right, tip) {
+  /**
+   * A sidebar row, shaped like the agents list's: glyph, name, then what is on the right.
+   * `percent` (a running run): a thin bar along the row's bottom edge, under the name.
+   */
+  panelRow(id, glyph, name, right, tip, percent) {
     const t = theme();
-    return h_flex()
-      .id(id)
-      .px(8)
-      .h(ROW_PX)
-      .flex_none()
-      .rounded(8)
-      .items_center()
+    const hasBar = percent !== undefined && !this.collapsed;
+    const line = h_flex()
       .gap(9)
-      .cursor_pointer()
-      .hover((s) => s.bg(t.hover))
-      .tooltip(tip)
-      .on_click(() => run("mod.open", { name: "local-env" }))
+      .items_center()
       .child(div().w(14).flex_none().flex().justify_center().text_size(11).child(glyph))
       .when(!this.collapsed, (el) =>
         el
           .child(div().flex_1().min_w(0).truncate().text_color(t.foreground).child(name))
           .child(h_flex().flex_none().gap(4).items_center().text_size(11).text_color(t.dim).children(right)),
+      );
+    return v_flex()
+      .id(id)
+      .px(8)
+      .h(ROW_PX)
+      .flex_none()
+      .rounded(8)
+      .justify_center()
+      .cursor_pointer()
+      .hover((s) => s.bg(t.hover))
+      .tooltip(tip)
+      .on_click(() => run("mod.open", { name: "local-env" }))
+      .child(line)
+      .when(hasBar, (el) =>
+        el.child(
+          div()
+            .ml(BAR_LEFT_PX)
+            .mt(3)
+            .h(3)
+            .rounded(2)
+            .bg(t.border)
+            .child(div().h(3).rounded(2).bg(t.working).w(`${percent}%`).transition("width", 400)),
+        ),
       );
   }
 
@@ -259,7 +279,7 @@ export default class LocalEnv extends View {
         : row.state === "done"
           ? [div().text_color(t.done).child(`${row.cmd} listo`)]
           : [div().text_color(t.blocked).child(row.state === "stale" ? "cortado" : "falló")];
-    return this.panelRow(`run-${row.file}`, this.runGlyph(row), row.env, right, `${row.env}: ${detailText(row)}`);
+    return this.panelRow(`run-${row.file}`, this.runGlyph(row), row.env, right, `${row.env}: ${detailText(row)}`, runPercent(row));
   }
 
   /** @param {import("./lib.js").SummaryItem} item */

@@ -88,6 +88,17 @@ export function barParts(row, width = 10) {
 }
 
 /**
+ * How far a running run is, 0–95 %: the current step counts, but only `done` is full.
+ * Undefined for anything that is not running (finished, failed, cut): no bar then.
+ * @param {Row} row @returns {number | undefined}
+ */
+export function runPercent(row) {
+  if (row.state !== "running") return undefined;
+  const ratio = row.of > 0 ? Math.min(1, Math.max(0, row.step / row.of)) : 0;
+  return Math.min(95, Math.round(ratio * 100));
+}
+
+/**
  * One run per environment: the worktree create that made it and the `up` running in it
  * write different files. The run that started last wins (ties: the last write).
  * @template {{ p: Progress }} T @param {readonly T[]} runs @returns {T[]}
