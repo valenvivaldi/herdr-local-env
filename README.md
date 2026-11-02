@@ -71,7 +71,7 @@ Sin atajo, desde cualquier terminal: `herdr-app do mod.open --name local-env`.
 **Panel "Local env"**, entre Spaces y Agents:
 
 - Una fila por entorno levantado, con un punto verde (amarillo si solo está la base o Tomcat todavía arranca) y sus puertos: Tomcat y SPA. Un click en un puerto abre la app en el navegador.
-- Mientras corre un `local-env up`, `worktree` o `sync`, una fila con spinner, el paso (`3/6 build`) y el tiempo. Cuando termina, aparece una notificación y la fila pasa a ser la del entorno levantado. Si falla, la fila queda en rojo 10 minutos; el detalle está en el tooltip y en `build/local-env/local-env.log`.
+- Mientras corre un `local-env up`, `worktree` o `sync`, una fila con spinner, el paso (`3/6 build`), el tiempo y una barrita de progreso debajo, que avanza paso a paso. Cuando termina, la barrita desaparece, aparece una notificación y la fila pasa a ser la del entorno levantado. Si falla, la fila queda en rojo 10 minutos, sin barrita; el detalle está en el tooltip y en `build/local-env/local-env.log`.
 - Un click en una fila, o en **Todos**, abre el diálogo.
 - Con el sidebar plegado quedan solo los puntos.
 
